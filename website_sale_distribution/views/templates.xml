@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+
+<!-- Extend the contact form making the phone required -->
+<template id="phone_contactus_form" name="Contact Form - Phone required" inherit_id="website_crm.contactus_form">
+    <xpath expr="//input[@name='phone']" position="replace">
+      <input type="text" class="form-control" name="phone" required="True" placeholder="e.g. (+32).81.81.37.00" t-attf-value="#{phone or ''}"/>
+  </xpath>
+</template>      
+
+<!-- remove quatity to Cart button -->
+<template id="register_product_quantity" inherit_id="website_sale.product_quantity" customize_show="True" name="Select Quantity">
+  <xpath expr="//div[@class='css_quantity input-group oe_website_spinner']" position="replace">
+    <div t-if="not user_id.partner_id.name == 'Public user'" class="css_quantity input-group oe_website_spinner">
+        <span class="input-group-addon">
+            <a t-attf-href="#" class="mb8 js_add_cart_json">
+                <i class="fa fa-minus"></i>
+            </a>
+        </span>
+        <input type="text" class="js_quantity form-control" data-min="1" name="add_qty" value="1"/>
+        <span class="input-group-addon">
+            <a t-attf-href="#" class="mb8 float_left js_add_cart_json">
+                <i class="fa fa-plus"></i>
+            </a>
+        </span>
+    </div>
+  </xpath>
+</template>
+
+<!-- remove Add to Cart button -->
+<template id="register_add_to_cart" inherit_id="website_sale.product" customize_show="True" name="Please Register">
+  <xpath expr="//a[@id='add_to_cart']" position="replace">
+    <a t-if="not user_id.partner_id.name == 'Public user'" id="add_to_cart" class="btn btn-primary btn-lg mt8 js_check_product a-submit" href="#">Add to Cart</a>
+    <a t-if="user_id.partner_id.name == 'Public user'" id="sign_in" class="btn btn-primary btn-lg mt8 " href="/web/login">Sign in</a>
+  </xpath>
+</template>
+
+<!--/shop/product show  price if register on the product page-->
+<template id="product_price_inherit" inherit_id="website_sale.product_price">
+<xpath expr="//div[@itemprop='offers']" position="replace">
+  <div t-if="not user_id.partner_id.name == 'Public user'" itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer" class="product_price mt16">
+      <h4 class="oe_price_h4 css_editable_mode_hidden">
+          <span class="text-danger oe_default_price" style="text-decoration: line-through; white-space: nowrap;"
+            t-field="product.lst_price"
+            t-field-options='{
+              "widget": "monetary",
+              "from_currency": "product.company_id.currency_id",
+              "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+           }'/>
+          <b class="oe_price" style="white-space: nowrap;"
+            t-field="product.price"
+            t-field-options='{
+               "widget": "monetary",
+               "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+           }'/>
+          <span itemprop="price" style="display:none;" t-esc="product.price"/>
+          <span itemprop="priceCurrency" style="display:none;" t-esc="user_id.partner_id.property_product_pricelist.currency_id.name"/>
+      </h4>
+      <h4 class="css_editable_mode_display" style="display: none;">
+        <span t-field="product.lst_price"
+            t-field-options='{
+               "widget": "monetary",
+               "display_currency": "website.pricelist_id.currency_id"
+           }'/>
+      </h4>
+      <h4 class="hidden oe_not_available bg-warning">Product not available</h4>
+  </div>
+</xpath>
+</template>
+
+<!-- Remove the variants price if not register on the product_variants page -->
+<template id="remove_price_product_variants" inherit_id="website_sale.product_variants" customize_show="True" name="Remove the price if not loged">
+  <xpath expr="//span[@class='badge']" position="replace">
+    <span t-if="not user_id.partner_id.name == 'Public user'" class="badge">
+      <t t-esc="variant_id.price_extra > 0 and '+' or ''"/><span t-field="variant_id.price_extra" style="white-space: nowrap;" t-field-options='{
+            "widget": "monetary",
+            "from_currency": "product.company_id.currency_id",
+            "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+          }'/>
+    </span>
+  </xpath>
+</template>
+
+<template id="remove_price_variants" inherit_id="website_sale.variants" customize_show="True" name="Remove the price if not loged">
+  <xpath expr="//span[@class='badge']" position="replace">
+    <span class="badge" t-if="not user_id.partner_id.name == 'Public user' and value_id.price_extra">
+        <t t-esc="value_id.price_extra > 0 and '+' or ''"/><span t-field="value_id.price_extra" style="white-space: nowrap;" t-field-options='{
+                "widget": "monetary",
+                "from_currency": "product.company_id.currency_id",
+                "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+             }'/>
+    </span>
+  </xpath>
+</template>
+
+<!-- Remove the variants price if not register on the front page -->
+<template id="remove_price_products_item" inherit_id="website_sale.products_item" active="False" customize_show="True" name="Remove the price if not loged">
+  <xpath expr="//div[@itemprop='offers']" position="replace">
+      <div itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer" class="product_price" t-if="not user_id.partner_id.name == 'Public user' and product.product_variant_ids">
+          <b>
+              <t t-if="(compute_currency(product.lst_price) - product.price) &gt; 0.1">
+                <del class="text-danger" style="white-space: nowrap;" t-field="product.lst_price" t-field-options='{
+                  "widget": "monetary",
+                  "from_currency": "product.company_id.currency_id",
+                  "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+                }'/>&amp;nbsp;
+              </t>
+              <span t-field="product.price" style="white-space: nowrap;"  t-field-options='{
+                   "widget": "monetary",
+                   "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+               }'>
+              </span>
+              <span itemprop="price" style="display:none;" t-esc="product.price"/>
+              <span itemprop="priceCurrency" style="display:none;" t-esc="user_id.partner_id.property_product_pricelist.currency_id.name"/>
+          </b>
+      </div>
+  </xpath>
+</template>
+
+<!-- Remove the products_add_to_cart cart if not register on the front page -->
+<template id="remove_products_add_to_cart" inherit_id="remove_price_products_item" active="True" customize_show="True" name="Add to Cart Loged in">
+  <xpath expr="//div[@class='product_price']" position="inside">
+    <input name="product_id" t-att-value="product.product_variant_ids[0].id" type="hidden"/>
+    <a t-if="not user_id.partner_id.name == 'Public user'" class="btn btn-default btn-xs fa fa-shopping-cart a-submit"/>
+  </xpath>
+</template>
+
+<!-- Replace the copyright -->
+<template id="remove_footer_copyright" inherit_id="website.layout_footer_copyright" name="Footer Copyright">
+    <xpath expr="//div[@class='container mt16 mb8']" position="replace">
+        <div class="container mt16 mb8">
+            <div class="pull-right" t-ignore="true" t-if="not editable">
+                Powered by <a class="label label-danger" href="http://www.percar.com/">Percar.com</a>,
+                <a href="http://www.percar.com/">Percar.com</a>.
+            </div>
+            <div class="pull-left text-muted">
+                Copyright &amp;copy; <span t-field="res_company.name">Company name</span>
+            </div>
+        </div>
+    </xpath>
+</template>
+
+
+<!-- Default values to selection --><!-- 
+<template id="new_fields_checkout" inherit_id="website_sale.checkout" name="Bank account">
+  <xpath expr="//div[@class='col-md-8 oe_cart']/div[@class='row']/div[4]" position="after">
+    <div t-attf-class="form-group #{error.get('bank_account_type_id') and 'has-error' or ''} col-lg-6">
+        <label class="control-label" for="bank_account_type_id" style="font-weight: normal">Bank Account Type</label>
+        <select name="bank_account_type_id" class="form-control">
+            <option value="">select...</option>
+            <t t-foreach="banks_type_ids or []" t-as="banks_type">
+                <option t-att-value="banks_type.code" style="display:none;" t-att-data-country_id="banks_type.code" t-att-selected="banks_type.code == checkout.get('bank_account_type_id')"><t t-esc="banks_type.name"/></option>
+            </t>
+        </select>
+    </div>
+
+    <div t-attf-class="form-group #{error.get('bank_account') and 'has-error' or ''} col-lg-6">
+        <label class="control-label" for="bank_account">Your bank account</label>
+        <input type="text" name="bank_account" class="form-control" t-att-value="checkout.get('bank_account')"/>
+    </div>
+  </xpath>
+</template>
+
+<template id="new_fields_checkout2" inherit_id="website_sale.checkout">
+  <xpath expr="//ul[@class='wizard pull-right']" position="inside">
+      <t t-foreach="[1,2,3]" t-as="digit">
+              <li class="text-muted"><t t-esc="digit" /><span class="chevron"></span></li>
+      </t>
+  </xpath>
+</template>
+
+<template id="new_fields_checkout3" inherit_id="website_sale.checkout" active="False" customize_show="True" name="Default new_fields_checkout3">
+  <xpath expr="//select[@name='shipping_country_id']" position="inside">
+
+      <t t-foreach="[1,2,3]" t-as="digit">
+    <t t-esc="digit" />
+</t>
+  </xpath>
+</template>
+
+<template id="new_payment" inherit_id="website_sale.payment" active="False" customize_show="True" name="Default payment">
+  <xpath expr="//div[@class='container oe_website_sale']" position="inside">
+
+      <t t-foreach="[1,2,3]" t-as="digit">
+    <t t-esc="digit" />
+</t>
+  </xpath>
+</template>
+ -->
+
+</data>
+</openerp>
